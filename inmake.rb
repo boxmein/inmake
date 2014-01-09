@@ -14,7 +14,7 @@
 #   ruby $0 [options]
 #   , where [options] are: 
 #
-#   -p, --prefix PREFIX (optional)
+#   -p, --prefix PREFIX (required)
 #       Specifies the comment prefix to look for at the start of each line.
 #   -f, --file FILE (required)
 #       Specifies the filename to actually compile.

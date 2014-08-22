@@ -18,7 +18,7 @@ OptionParser.new do |parser|
 		opts[:prefix] = prefix
 	end
 
-	parser.on("-m","--moo [POSTFIX]", "Use a postfix instead of a prefix") do |postfix|
+	parser.on("-m","--postfix [POSTFIX]", "Use a postfix instead of a prefix") do |postfix|
 		opts[:postfix] = postfix
 	end
 
@@ -61,6 +61,7 @@ File.open(opts[:filename]) do |f|
 
 	# mode #1: prefixed with --prefix
 	if opts[:prefix]
+		# REGEXES SUPPORT STRING INTERPOLATION AAHHH RUBY IS AWESOME
 		rx = /^\s*#{opts[:prefix]}\s*/
 		command = f.each_line.detect do |line|
 			rx.match line
@@ -68,7 +69,7 @@ File.open(opts[:filename]) do |f|
 		# let's cut our prefix off before shipping the command off to system
 		command.gsub!(rx, '')
 
-	# mode #2: postfixed with --moo
+	# mode #2: postfixed with --postfix
 	elsif opts[:postfix]
 		rx = /#{opts[:postfix]}\s*$/
 		command = f.each_line.detect do |line|
@@ -134,7 +135,7 @@ end
 #       e.g //# gcc -o test.exe test.c -DAWESOME=1
 #       and ruby inmake.rb -f test.c -p '//#'
 #
-#   -m, --moo POSTFIX (optional)
+#   -m, --postfix POSTFIX (optional)
 #       Specifies a post-fix word to look for in order to find the command.
 #       Strips away leading characters until whitespace.
 #       e.g // gcc -o test.exe test.c -DAWESOME=1 moo

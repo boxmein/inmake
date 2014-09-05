@@ -34,11 +34,12 @@ OptionParser.new do |parser|
 
   parser.on("-r", "--regex REGEX", "Specify a regex to match the build string's line.") do |regex|
     begin
-      re = RegExp.compile regex
+      re = Regexp.compile regex
       opts[:regex] = re
       opts[:mode] = regex
-    rescue
-      abort "\"#{regex}\" is not a valid regular expression! Aborting."
+    rescue Exception => msg
+      abort "\"#{regex}\" is not a valid regular expression! Aborting.\n" \
+            "Error message: " + msg.to_s
     end
   end
 
@@ -117,32 +118,40 @@ File.open(opts[:filename]) do |f|
   rx = nil
 
   # mode #1: prefixed with --prefix
-  if opts[:prefix]
+  if opts[:mode] == :prefix
     # REGEXES SUPPORT STRING INTERPOLATION AAHHH RUBY IS AWESOME
-    rx = /^\s*#{opts[:prefix]}\s*/
+    rx = /^\s*#{Regexp.escape opts[:prefix]}\s*/
     command = f.each_line.detect do |line|
       rx.match line
     end
+    abort "didn't find a line with specified prefix. aborting" unless command
+    
     # let's cut our prefix off before shipping the command off to system
-    command.gsub!(rx, '')
+    command.gsub!(opts[:prefix], '')
 
   # mode #2: postfixed with --postfix
-  elsif opts[:postfix]
-    rx = /#{opts[:postfix]}\s*$/
+  elsif opts[:mode] == :postfix
+    rx = /#{Regexp.escape opts[:postfix]}\s*$/
     command = f.each_line.detect do |line|
       rx.match line
     end
+    abort "didn't find a line with specified postfix. aborting" unless command
+
     # let's cut off our postfix as well as our prefix
-    command.gsub!(rx, '')
+    command.gsub!(opts[:postfix], '')
     command = command[(command =~ /\s/)...command.length].strip
     
 
   # mode #3: manually regexing!
-  elsif opts[:regex]
+  elsif opts[:mode] == :regex
     rx = opts[:regex]
     command = f.each_line.detect do |line|
       rx.match line
     end
+
+    # how did I forget this??
+    abort "didn't find a line with specified postfix. aborting" unless command
+
     command = command[(command =~ /\s/)...command.length].strip
     # allow User to strip if User wants to
     command.gsub!(rx, '') if opts[:sm]
@@ -153,10 +162,17 @@ File.open(opts[:filename]) do |f|
     
     # eat the first line
     f.gets
+    abort "default: end of line reached on line 1!" if $_.nil?
+
     # get second or third depending on match
     command = f.gets
+    abort "default: end of line reached on line 2!" if $_.nil?
+
+    # if we've got a second line that looks like an encoding sign, 
+    # eat the second line and use the third
     if rx.match command.chomp
       command = f.gets
+      abort "default: end of line reached on line 3!" if $_.nil?
     end
     # slice until first whitespace and then strip the whitespace both ways
     command = command[(command =~ /\s/)...command.length].strip

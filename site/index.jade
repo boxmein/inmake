@@ -1,0 +1,24 @@
+// 
+   jade index.jade
+   inmake is neat
+extends layout
+
+block text
+  include:md index.md
+
+block navigation
+  li: a(href='#about') About
+  li: a(href='#modes') Modes
+  li: a(href='#usage') Usage
+  li: a(href='https://gist.github.com/boxmein/8303778/download') Download
+  li: a(href='#source-code') Source code
+  li: a(href='#sublime') Sublime build script
+  li: a(href='#examples') Examples
+
+block append head
+  link(rel='stylesheet',href='github.css')
+
+block append body 
+  script(src='highlight.pack.js')
+  script.
+    hljs.initHighlightingOnLoad();

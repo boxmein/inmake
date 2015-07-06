@@ -1,24 +1,18 @@
-inmake.rb
-=========
+# inmake
+
 <a name="about"></a>
-A command-line tool to sorta replace Makefiles, and to make my using Sublime 
-Text's build features a slight bit simpler. It runs on source code files, 
-looking for a code comment that might be considered the build command for this 
-file. Then, it runs the command in the shell via system().
 
-For further purposes, the build command / code comment is called a build
-string. 
+A multi-mode command line tool that lets you define your build / preprocessing 
+shell commands inside the files themselves. I use it for programs I write in 
+one file, via Sublime Text's build commands thing. 
 
-Modes
------
+## Modes
 
-The program can run in different 'modes' where the way it looks for the build
-string slightly vary. For example, in **prefix mode**, you can specify a 
-sequence to be searched for in the *start* of the string, and in **postfix 
-mode** you can specify a search for the *end* of the string. In both these 
-modes, the found string is cut off before the command is executed.
+inmake supports different kinds of search modes when running a command, starting
+from a simple prefix or suffix search ending with a full blown regular 
+expression.
 
-For example:
+### Prefix mode
 
 ``` python
 #!/usr/bin/python3
@@ -28,6 +22,10 @@ print "hello, this is code"
 # ruby inmake.rb -f ~/pythonfile.py -p "#|"
 ```
 
+
+
+### Suffix mode
+
 ``` c
 #include <stdio.h>
 // gcc -o cfile.out cfile.c look_here_im_the_build_string
@@ -35,42 +33,53 @@ int main() {
   printf("hello dude");
 }
 // inmake command line: 
-// ruby inmake.rb -f ~/cfile.c -m "look_here_im_the_build_string"
+// ruby inmake.rb -f ~/cfile.c -s "look_here_im_the_build_string"
 ```
 
-There's also **default mode**, which uses the second code line as the shell 
-command (while also stripping leading non-whitespace, followed by whitespace).
-*As an exception*, when the second line is used to specify encoding (for example
-in Python scripts where the first line is the shebang line), the third line 
-will be used instead.
 
-**Note: you don't need to distinguish your build string in default mode!**
 
-``` jade
-// 
-   jade index.jade
-extends layout
+### Default/Second Line mode
 
-block text
-  include:md index.md
-```
+inmake's second line mode is probably the most useful for a general use case. As
+most programming languages will let you place a code comment on the second line
+of the file, you can simply add a shell command there.
+
+If a Jade source file called `index.jade` looks like this:
+
+    //- useful jade file that converts Markdown to a proper HTML page
+    //- jade index.jade
+    extends layout
+
+    block text
+      include:md index.md
+
+then the command to run "jade index.jade" would be:
+
+    inmake index.jade
+
+
+
+### Regex mode
 
 The last running mode is for the advanced user, and it lets you specify your 
 very own **regular expression**, so you can search for whatever you like. 
 You'll also have the option of removing the matches from the build string 
 before running.
 
-``` python
-#!/usr/bin/python3
-# !!!weird-python-compiler!!! !!!pythonfile.py!!! !!!-o!!! !!!out.html!!!
-print "hello"
-# inmake line: 
-# ruby inmake.rb -f ~/pythonfile.py -r "!!!" --strip-matched
-```
+If a Python file called `blah.py` with a regex build command looks like this:
+
+    #!/usr/bin/python3
+    # !!!weird-python-compiler!!! !!!pythonfile.py!!! !!!-o!!! !!!out.html!!!
+    print "hello"
+
+the command to build it looks like that:
+
+    # inmake -x "!!!" --strip-matched blah.py
 
 
-Variables
----------
+
+
+## Variables
 
 Aside from different run modes, you can specify key-value pairs that will be
 used as 'variables' inside the build string. For example, by passing
@@ -79,51 +88,82 @@ which will be replaced with `1` for every occurrence.
 
 There are also some default variables: 
 
-`{{f}}` is the full filename passed into inmake.  
+`{{f}}` is the filename of the current file.  
 `{{bn}}` is that file's base name. (the filename without leading directories)  
-`{{dn}}` is that file's directory name. (just the directory)
+`{{bn1}}` is that file's base name without a file extension. I've needed that a
+lot so maybe you'll find use in this too!  
+`{{ext}}` is the file's extension. eg ".rb"  
+`{{dn}}` is that file's directory name. (just the directory)  
+`{{mode}}` is the file's access mode (makes sense on a Linux machine)  
+`{{mtime}}` is the file's last modified time as a Unix time.
+`{{ctime}}` is the file's creation time as a Unix time.
+`{{size}}` is the file's size in bytes.
 
-``` c
-// lookie here, a C file!
-// gcc -o {{bn}}.exe {{f}} -mwindows -std=c99
-#include <windows.h>
-LRESULT WINAPI WinMain( ...
-```
+So if a C source file called `advanced_virus.c` looks like this:
 
-Usage
------
+    // advanced virus
+    // gcc -o {{bn1}} {{f}} -fno-fast-math -std=c++15 -DLINES={{LINES}}
+    #include <stdio.h>
+    int main() { 
+      int i = LINES; 
+      while (lines --> 0) // C++15 standard "decrease-to" operator
+        printf("lol you've been hacked!"); 
+    }
 
-``` plain
-ruby $0 [options...],
-  where options are:
+The appropriate command to build it would be:
 
-  -f FILE, --file FILE
-          Specify the file in which the build string is found
-  
-  -p PREFIX, --prefix PREFIX
-          Specify the build string's prefix.
+    inmake -a LINES=1500 advanced_virus.c
 
-  -m POSTFIX, --postfix POSTFIX
-          Specify the build string's postfix.
 
-  -r REGEX, --regex REGEX
-          Specify a regex to match the build string.
 
-  --[no-]strip-matched
-          Strip regex matches (-r) from the build string.
+## Actual Usage
 
-  -a KEY=VALUE, --add KEY=VALUE
-          Add key/value pairs to variables.
+    inmake [options] [files]
 
-  --no-vars
-          Disable all variables.
 
-  --list-vars
-          Print currently defined variables, and exit.
-```
+
+### Options
+
+`-f, --file FILENAME`: Specify a target file. You can also specify files by 
+adding them after optional stuff.
+
+`-a, --add-var KEY=VALUE`: Replaces `{{KEY}}` with `VALUE` in the build command 
+before running it. 
+
+`-p, --prefix PREFIX`: Build command is searched via a text line prefix.
+
+`-s, --suffix SUFFIX`: Build command is searched via a text line suffix.
+
+`-x, --regex REGEX`: Build command is searched via a regex applied to the text 
+line
+
+(The default search mode is "second-line" which is used when no other search 
+mode is defined.)
+
+`    --[no-]strip-matched`: Strip found regex matches before running the build 
+command. **Default: false**
+
+`    --[no-]ignore-nonmatched`: Silently continue if a file does not seem to 
+have a build command. **Default: true**
+
+`    --no-vars`: Disables all variables (even the default variables). **Default: false**
+
+`-d, --dir-mode MODE`: Configure how directories are handled. Two possible 
+values: `acceptDirs` and `ignoreDirs`. `acceptDirs` will make it so that 
+directories passed to inmake are recursed and inmake is applied to all files 
+inside. `ignoreDirs` skips all directories. **Default: acceptDirs**
+
+
+
+### Files
+
+Files can be either actually files or directories. Directories are handled 
+according to the prevailing dir-mode.
+
+
 
 <a name="sublime"></a>
-# Sublime Text build script
+## Sublime Text build script
 
 This tool is an awesome companion to your text editor. I use Sublime Text, so 
 I've also included the build script I use here. Make sure to replace $LOCATION
@@ -131,13 +171,7 @@ with where your script resides in.
 
 ``` json
 {
-  "shell_cmd": "ruby $LOCATION/inmake.rb -f \"$file\""
+  "shell_cmd": "inmake \"$file\""
 }
 ``` 
-
-# Source code
-
-The source code will always just be accessible [here][gist]. 
-
-[gist]: https://gist.github.com/boxmein/8303778
 

@@ -1,0 +1,6 @@
+# gem pops the .gem file there
+pkg
+# if I ever decide that rubymine is a good idea
+.idea
+# hah see what I did there
+

@@ -1,0 +1,26 @@
+#!/usr/bin/env ruby
+
+require 'inmake'
+
+
+begin
+  # Generate a config from command-line arguments and resolve all files to 
+  # absolute paths
+  cfg = Inmake::Config.fromArguments
+  cfg = Inmake::Config.resolveFiles cfg
+
+  # Run inmake on all files found
+  runner = Inmake::Runner.new cfg
+
+  runner.run
+rescue Inmake::NoFilesGiven => e
+  abort e.message
+rescue Inmake::InvalidDirMode => e
+  abort e.message
+rescue Inmake::InvalidVarDefinition => e
+  abort e.message
+rescue Inmake::MultipleModeException => e
+  abort e.message
+rescue Inmake::CommandNotFound => e
+  abort e.message
+end

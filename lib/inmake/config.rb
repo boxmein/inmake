@@ -1,6 +1,5 @@
 #!/usr/bin/env ruby
 # echo hi from Inmake::Config!
-require 'inmake/version'
 module Inmake
 
   ##
@@ -176,7 +175,7 @@ module Inmake
 end
 
 INMAKE_BANNER = <<-EOF
-inmake v#{Inmake::VERSION} - the inline build command runner
+inmake - the inline build command runner
 Runs commands directly embedded inside your source code. 
 Usage: #{$0} [options...] [files]
 Options:

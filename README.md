@@ -8,6 +8,13 @@ A multi-mode command line tool that lets you define your build / preprocessing
 shell commands inside the files themselves. I use it for programs I write in 
 one file, via Sublime Text's build commands thing. 
 
+## Installing
+
+    gem install inmake
+
+This will put `inmake` in your path, which means you will most likely be able to 
+use it out of the box. 
+
 ## Modes
 
 inmake supports different kinds of search modes when running a command, starting

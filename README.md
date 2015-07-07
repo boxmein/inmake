@@ -1,5 +1,7 @@
 # inmake
 
+[![Gem Version](https://badge.fury.io/rb/inmake.svg)](http://badge.fury.io/rb/inmake)
+
 <a name="about"></a>
 
 A multi-mode command line tool that lets you define your build / preprocessing 

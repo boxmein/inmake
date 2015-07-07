@@ -14,17 +14,29 @@ expression.
 
 ### Prefix mode
 
+Looks for a character sequence at the start of the code line. Something like `#|`,
+or `//!~$$`.Imagine a Python file called `asdf.py` that has a build command identified
+by a prefix:
+
 ``` python
 #!/usr/bin/python3
 print "hello, this is code"
 #| weird-python-compiler pythonfile.py -o out.css
-# inmake command line:
-# ruby inmake.rb -f ~/pythonfile.py -p "#|"
 ```
 
+Building it automatically is easy:
 
+```
+inmake -p "#|" asdf.py
+
+```
 
 ### Suffix mode
+
+Searches for something in the end of a code line to match the build string. However,
+does not remove the suffix unless `--strip-matched` is also on the command line.
+
+If this was called `hey.c`:
 
 ``` c
 #include <stdio.h>
@@ -32,10 +44,13 @@ print "hello, this is code"
 int main() { 
   printf("hello dude");
 }
-// inmake command line: 
-// ruby inmake.rb -f ~/cfile.c -s "look_here_im_the_build_string"
 ```
 
+...then building it will look like:
+
+```
+inmake -s "look_here_im_the_build_string" --strip-matched hey.c
+```
 
 
 ### Default/Second Line mode
@@ -46,17 +61,20 @@ of the file, you can simply add a shell command there.
 
 If a Jade source file called `index.jade` looks like this:
 
-    //- useful jade file that converts Markdown to a proper HTML page
-    //- jade index.jade
-    extends layout
+```jade
+//- useful jade file that converts Markdown to a proper HTML page
+//- jade index.jade
+extends layout
 
-    block text
-      include:md index.md
+block text
+  include:md index.md
+```
 
 then the command to run "jade index.jade" would be:
 
-    inmake index.jade
-
+```bash
+inmake index.jade
+```
 
 
 ### Regex mode
@@ -68,14 +86,17 @@ before running.
 
 If a Python file called `blah.py` with a regex build command looks like this:
 
-    #!/usr/bin/python3
-    # !!!weird-python-compiler!!! !!!pythonfile.py!!! !!!-o!!! !!!out.html!!!
-    print "hello"
+```python
+#!/usr/bin/python3
+# !!!weird-python-compiler!!! !!!pythonfile.py!!! !!!-o!!! !!!out.html!!!
+print "hello"
+```
 
 the command to build it looks like that:
 
-    # inmake -x "!!!" --strip-matched blah.py
-
+```bash
+inmake -x "!!!" --strip-matched blah.py
+```
 
 
 
@@ -101,19 +122,22 @@ lot so maybe you'll find use in this too!
 
 So if a C source file called `advanced_virus.c` looks like this:
 
-    // advanced virus
-    // gcc -o {{bn1}} {{f}} -fno-fast-math -std=c++15 -DLINES={{LINES}}
-    #include <stdio.h>
-    int main() { 
-      int i = LINES; 
-      while (lines --> 0) // C++15 standard "decrease-to" operator
-        printf("lol you've been hacked!"); 
-    }
+```c
+// advanced virus
+// gcc -o {{bn1}} {{f}} -fno-fast-math -std=c++15 -DLINES={{LINES}}
+#include <stdio.h>
+int main() { 
+  int i = LINES; 
+  while (lines --> 0) // C++15 standard "decrease-to" operator
+    printf("lol you've been hacked!"); 
+}
+```
 
 The appropriate command to build it would be:
 
-    inmake -a LINES=1500 advanced_virus.c
-
+```bash
+inmake -a LINES=1500 advanced_virus.c
+```
 
 
 ## Actual Usage
